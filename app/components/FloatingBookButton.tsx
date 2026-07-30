@@ -26,7 +26,7 @@ export default function FloatingBookButton() {
   return (
     <Link
       href="/book"
-      className={`fixed bottom-6 left-6 z-40 bg-[#5c3d35] hover:bg-[#482e28] text-white px-6 py-3.5 rounded-full shadow-2xl font-serif font-bold text-sm tracking-wider flex items-center gap-2 transition-all duration-500 transform ${
+      className={`fixed bottom-6 left-6 z-40 bg-[#d97706] hover:bg-[#b45309] text-white px-6 py-3.5 rounded-full shadow-2xl font-serif font-bold text-sm tracking-wider flex items-center gap-2 transition-all duration-500 transform ${
         isVisible
           ? 'translate-y-0 opacity-100 scale-100'
           : 'translate-y-12 opacity-0 scale-90 pointer-events-none'
