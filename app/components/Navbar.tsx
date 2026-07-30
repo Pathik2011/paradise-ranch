@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 
-export default function Navbar() {
+export default function Navbar({ onBook }: { onBook: () => void }) {
     const [scrolled, setScrolled] = useState(false)
     const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -48,12 +48,12 @@ export default function Navbar() {
                             {link.label}
                         </a>
                     ))}
-                    <a
-                        href="#contact"
+                    <button
+                        onClick={onBook}
                         className="bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold px-5 py-2 rounded-full transition"
                     >
                         Book Now
-                    </a>
+                    </button>
                 </div>
 
                 {/* Mobile hamburger */}
@@ -84,13 +84,15 @@ export default function Navbar() {
                                 {link.label}
                             </a>
                         ))}
-                        <a
-                            href="#contact"
-                            onClick={() => setMobileOpen(false)}
-                            className="block bg-amber-600 text-white text-center font-semibold px-5 py-2 rounded-full"
+                        <button
+                            onClick={() => {
+                                setMobileOpen(false)
+                                onBook()
+                            }}
+                            className="block w-full bg-amber-600 text-white text-center font-semibold px-5 py-2 rounded-full"
                         >
                             Book Now
-                        </a>
+                        </button>
                     </div>
                 </div>
             )}
