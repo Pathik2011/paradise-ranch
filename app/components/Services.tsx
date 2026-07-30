@@ -14,6 +14,13 @@ export default function Services() {
       price: '$35',
       duration: '30 minutes',
       popular: false,
+      features: [
+        'Ages 7+',
+        '30 Minutes',
+        'Walk only',
+        'Helmet Rental Included',
+        'Max Group Size Of 6'
+      ]
     },
     {
       icon: (
@@ -27,6 +34,13 @@ export default function Services() {
       price: '$60',
       duration: '1 hour',
       popular: true,
+      features: [
+        'Ages 7+',
+        '60 Minutes',
+        'Walk only',
+        'Helmet Rental Included',
+        'Max Group Size Of 6'
+      ]
     },
     {
       icon: (
@@ -39,6 +53,13 @@ export default function Services() {
       price: '$60',
       duration: 'per person',
       popular: false,
+      features: [
+        'Ages 7+',
+        '90 Minutes',
+        'Faster Pace',
+        'Helmet Rental Included',
+        'Max Group Size Of 6'
+      ]
     },
   ]
 
@@ -63,6 +84,18 @@ export default function Services() {
                 <div className="text-amber-600 mb-4">{s.icon}</div>
                 <h3 className="text-xl font-bold text-stone-800 mb-2">{s.title}</h3>
                 <p className="text-stone-500 text-sm mb-4">{s.desc}</p>
+                
+                {/* Features Checklist */}
+                <div className="space-y-2 mb-6 text-left">
+                  {s.features.map((feature, fIdx) => (
+                    <div key={fIdx} className="flex items-center gap-2.5 text-stone-600 text-xs font-medium">
+                      <svg className="w-4 h-4 text-emerald-700 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                      <span>{feature}</span>
+                    </div>
+                  ))}
+                </div>
                 <div className="text-3xl font-bold text-amber-700 mb-1">{s.price}</div>
                 <div className="text-stone-400 text-sm mb-6">{s.duration}</div>
                 <Link

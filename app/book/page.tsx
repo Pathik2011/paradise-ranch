@@ -12,6 +12,7 @@ interface Service {
   price: string
   duration: string
   popular: boolean
+  features: string[]
 }
 
 interface RiderData {
@@ -29,6 +30,13 @@ const SERVICES: Service[] = [
     price: '$35',
     duration: '30 minutes',
     popular: false,
+    features: [
+      'Ages 7+',
+      '30 Minutes',
+      'Walk only',
+      'Helmet Rental Included',
+      'Max Group Size Of 6'
+    ]
   },
   {
     title: 'Trail Ride',
@@ -36,6 +44,13 @@ const SERVICES: Service[] = [
     price: '$60',
     duration: '1 hour',
     popular: true,
+    features: [
+      'Ages 7+',
+      '60 Minutes',
+      'Walk only',
+      'Helmet Rental Included',
+      'Max Group Size Of 6'
+    ]
   },
   {
     title: 'Mentone Tour',
@@ -43,6 +58,13 @@ const SERVICES: Service[] = [
     price: '$60',
     duration: 'per person',
     popular: false,
+    features: [
+      'Ages 7+',
+      '90 Minutes',
+      'Faster Pace',
+      'Helmet Rental Included',
+      'Max Group Size Of 6'
+    ]
   },
 ]
 
@@ -334,7 +356,19 @@ function BookingWizard() {
                       )}
                       <div>
                         <h3 className="text-xl font-bold text-stone-900 mb-2 font-serif">{service.title}</h3>
-                        <p className="text-stone-500 text-xs leading-relaxed mb-6">{service.desc}</p>
+                        <p className="text-stone-500 text-xs leading-relaxed mb-4">{service.desc}</p>
+                        
+                        {/* Features Checklist */}
+                        <div className="space-y-2 mb-6">
+                          {service.features.map((feature, fIdx) => (
+                            <div key={fIdx} className="flex items-center gap-2.5 text-stone-600 text-xs font-medium">
+                              <svg className="w-4 h-4 text-emerald-700 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                              </svg>
+                              <span>{feature}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                       <div>
                         <div className="border-t border-stone-100 pt-4 mb-4">
