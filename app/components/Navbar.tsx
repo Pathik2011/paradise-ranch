@@ -33,10 +33,15 @@ export default function Navbar({ forceSolid = false }: { forceSolid?: boolean })
             <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
                 <Link
                     href="/"
-                    className={`text-xl font-bold tracking-tight transition ${isSolid ? 'text-stone-800' : 'text-white'
+                    className={`flex items-center gap-3 text-xl font-bold tracking-tight transition ${isSolid ? 'text-stone-800' : 'text-white'
                         }`}
                 >
-                    Paradise Ranch
+                    <img 
+                        src="/logo.jpg" 
+                        alt="Paradise Ranch Logo" 
+                        className="h-8 w-8 rounded-full object-cover border border-amber-600/30 shadow-sm"
+                    />
+                    <span>Paradise Ranch</span>
                 </Link>
 
                 {/* Desktop links */}
