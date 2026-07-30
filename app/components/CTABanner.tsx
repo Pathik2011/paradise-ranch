@@ -1,6 +1,7 @@
+import Link from 'next/link'
 import ScrollReveal from './ScrollReveal'
 
-export default function CTABanner({ onBook }: { onBook: () => void }) {
+export default function CTABanner() {
   return (
     <section className="bg-amber-700 py-16 px-6 text-center">
       <ScrollReveal>
@@ -8,12 +9,12 @@ export default function CTABanner({ onBook }: { onBook: () => void }) {
         <p className="text-amber-100 text-lg mb-8 max-w-xl mx-auto">
           Weekend slots fill up fast. Book your adventure at Paradise Ranch today and experience Wheeler Lake on horseback.
         </p>
-        <button
-          onClick={onBook}
+        <Link
+          href="/book"
           className="inline-block bg-white text-amber-700 hover:bg-stone-100 px-10 py-4 rounded-full font-bold text-lg transition shadow-lg hover:shadow-xl hover:-translate-y-0.5"
         >
           Book Your Ride Now
-        </button>
+        </Link>
       </ScrollReveal>
     </section>
   )

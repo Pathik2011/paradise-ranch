@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 
-export default function Hero({ onBook }: { onBook: () => void }) {
+export default function Hero() {
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
@@ -45,12 +46,12 @@ export default function Hero({ onBook }: { onBook: () => void }) {
           className={`flex flex-col sm:flex-row gap-4 justify-center transition-all duration-1000 delay-500 ${loaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
             }`}
         >
-          <button
-            onClick={onBook}
+          <Link
+            href="/book"
             className="bg-amber-600 hover:bg-amber-700 text-white px-8 py-3 rounded-full font-semibold text-lg transition shadow-lg hover:shadow-xl hover:-translate-y-0.5"
           >
             Book a Ride
-          </button>
+          </Link>
           <a
             href="#about"
             className="border-2 border-white text-white hover:bg-white/10 px-8 py-3 rounded-full font-semibold text-lg transition"

@@ -1,12 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 
-interface FloatingBookButtonProps {
-  onClick: () => void
-}
-
-export default function FloatingBookButton({ onClick }: FloatingBookButtonProps) {
+export default function FloatingBookButton() {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
@@ -27,8 +24,8 @@ export default function FloatingBookButton({ onClick }: FloatingBookButtonProps)
   }, [])
 
   return (
-    <button
-      onClick={onClick}
+    <Link
+      href="/book"
       className={`fixed bottom-6 left-6 z-40 bg-[#5c3d35] hover:bg-[#482e28] text-white px-6 py-3.5 rounded-full shadow-2xl font-serif font-bold text-sm tracking-wider flex items-center gap-2 transition-all duration-500 transform ${
         isVisible
           ? 'translate-y-0 opacity-100 scale-100'
@@ -40,6 +37,6 @@ export default function FloatingBookButton({ onClick }: FloatingBookButtonProps)
         <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
       </svg>
       Book Now
-    </button>
+    </Link>
   )
 }

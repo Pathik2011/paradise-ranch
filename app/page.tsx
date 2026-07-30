@@ -1,6 +1,3 @@
-'use client'
-
-import { useState } from 'react'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import Stats from './components/Stats'
@@ -14,48 +11,27 @@ import FAQ from './components/FAQ'
 import Contact from './components/Contact'
 import CTABanner from './components/CTABanner'
 import Footer from './components/Footer'
-import BookingModal from './components/BookingModal'
 import FloatingBookButton from './components/FloatingBookButton'
 
 export default function Home() {
-  const [isBookingOpen, setIsBookingOpen] = useState(false)
-  const [bookingService, setBookingService] = useState<string | null>(null)
-
-  const handleOpenBooking = (service: string | null = null) => {
-    setBookingService(service)
-    setIsBookingOpen(true)
-  }
-
-  const handleCloseBooking = () => {
-    setIsBookingOpen(false)
-    setBookingService(null)
-  }
-
   return (
     <main className="min-h-screen bg-stone-50 text-stone-800">
-      <Navbar onBook={() => handleOpenBooking(null)} />
-      <Hero onBook={() => handleOpenBooking(null)} />
+      <Navbar />
+      <Hero />
       <Stats />
       <About />
       <Founder />
-      <Services onBook={(service) => handleOpenBooking(service)} />
+      <Services />
       <MeetTheHorses />
       <Gallery />
       <Testimonials />
       <FAQ />
       <Contact />
-      <CTABanner onBook={() => handleOpenBooking(null)} />
+      <CTABanner />
       <Footer />
 
       {/* Floating Scroll Book Now Button */}
-      <FloatingBookButton onClick={() => handleOpenBooking(null)} />
-
-      {/* Interactive Booking Wizard Modal */}
-      <BookingModal 
-        isOpen={isBookingOpen} 
-        onClose={handleCloseBooking} 
-        initialService={bookingService} 
-      />
+      <FloatingBookButton />
     </main>
   )
 }

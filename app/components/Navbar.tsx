@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 
-export default function Navbar({ onBook }: { onBook: () => void }) {
+export default function Navbar() {
     const [scrolled, setScrolled] = useState(false)
     const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -48,12 +49,12 @@ export default function Navbar({ onBook }: { onBook: () => void }) {
                             {link.label}
                         </a>
                     ))}
-                    <button
-                        onClick={onBook}
+                    <Link
+                        href="/book"
                         className="bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold px-5 py-2 rounded-full transition"
                     >
                         Book Now
-                    </button>
+                    </Link>
                 </div>
 
                 {/* Mobile hamburger */}
@@ -84,15 +85,13 @@ export default function Navbar({ onBook }: { onBook: () => void }) {
                                 {link.label}
                             </a>
                         ))}
-                        <button
-                            onClick={() => {
-                                setMobileOpen(false)
-                                onBook()
-                            }}
+                        <Link
+                            href="/book"
+                            onClick={() => setMobileOpen(false)}
                             className="block w-full bg-amber-600 text-white text-center font-semibold px-5 py-2 rounded-full"
                         >
                             Book Now
-                        </button>
+                        </Link>
                     </div>
                 </div>
             )}

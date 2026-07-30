@@ -1,6 +1,7 @@
+import Link from 'next/link'
 import ScrollReveal from './ScrollReveal'
 
-export default function Services({ onBook }: { onBook: (service: string) => void }) {
+export default function Services() {
   const services = [
     {
       icon: (
@@ -64,12 +65,12 @@ export default function Services({ onBook }: { onBook: (service: string) => void
                 <p className="text-stone-500 text-sm mb-4">{s.desc}</p>
                 <div className="text-3xl font-bold text-amber-700 mb-1">{s.price}</div>
                 <div className="text-stone-400 text-sm mb-6">{s.duration}</div>
-                <button
-                  onClick={() => onBook(s.title)}
-                  className="w-full bg-[#5c3d35] hover:bg-[#482e28] text-white text-sm font-semibold py-2.5 rounded-xl transition shadow hover:shadow-md"
+                <Link
+                  href={`/book?service=${encodeURIComponent(s.title)}`}
+                  className="block w-full text-center bg-[#5c3d35] hover:bg-[#482e28] text-white text-sm font-semibold py-2.5 rounded-xl transition shadow hover:shadow-md"
                 >
                   Book Now
-                </button>
+                </Link>
               </div>
             </ScrollReveal>
           ))}
