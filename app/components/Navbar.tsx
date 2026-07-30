@@ -16,13 +16,13 @@ export default function Navbar({ forceSolid = false }: { forceSolid?: boolean })
     }, [])
 
     const links = [
-        { label: 'Home', href: '#' },
-        { label: 'About', href: '#about' },
-        { label: 'Rides', href: '#services' },
-        { label: 'Horses', href: '#horses' },
-        { label: 'Gallery', href: '#gallery' },
-        { label: 'FAQ', href: '#faq' },
-        { label: 'Contact', href: '#contact' },
+        { label: 'Home', href: '/' },
+        { label: 'About', href: '/#about' },
+        { label: 'Rides', href: '/#services' },
+        { label: 'Horses', href: '/#horses' },
+        { label: 'Gallery', href: '/#gallery' },
+        { label: 'FAQ', href: '/#faq' },
+        { label: 'Contact', href: '/#contact' },
     ]
 
     return (
@@ -31,13 +31,13 @@ export default function Navbar({ forceSolid = false }: { forceSolid?: boolean })
                 }`}
         >
             <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
-                <a
-                    href="#"
+                <Link
+                    href="/"
                     className={`text-xl font-bold tracking-tight transition ${isSolid ? 'text-stone-800' : 'text-white'
                         }`}
                 >
                     Paradise Ranch
-                </a>
+                </Link>
 
                 {/* Desktop links */}
                 <div className="hidden md:flex items-center gap-8">
