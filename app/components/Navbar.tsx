@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
-export default function Navbar() {
+export default function Navbar({ forceSolid = false }: { forceSolid?: boolean }) {
     const [scrolled, setScrolled] = useState(false)
     const [mobileOpen, setMobileOpen] = useState(false)
+
+    const isSolid = forceSolid || scrolled;
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 50)
@@ -25,13 +27,13 @@ export default function Navbar() {
 
     return (
         <nav
-            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-md shadow-md py-3' : 'bg-transparent py-5'
+            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isSolid ? 'bg-white/95 backdrop-blur-md shadow-md py-3' : 'bg-transparent py-5'
                 }`}
         >
             <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
                 <a
                     href="#"
-                    className={`text-xl font-bold tracking-tight transition ${scrolled ? 'text-stone-800' : 'text-white'
+                    className={`text-xl font-bold tracking-tight transition ${isSolid ? 'text-stone-800' : 'text-white'
                         }`}
                 >
                     Paradise Ranch
@@ -43,7 +45,7 @@ export default function Navbar() {
                         <a
                             key={link.label}
                             href={link.href}
-                            className={`text-sm font-medium transition hover:text-amber-600 ${scrolled ? 'text-stone-600' : 'text-white/90'
+                            className={`text-sm font-medium transition hover:text-amber-600 ${isSolid ? 'text-stone-600' : 'text-white/90'
                                 }`}
                         >
                             {link.label}
@@ -63,10 +65,10 @@ export default function Navbar() {
                     onClick={() => setMobileOpen(!mobileOpen)}
                     aria-label="Toggle menu"
                 >
-                    <div className={`space-y-1.5 ${scrolled ? 'text-stone-800' : 'text-white'}`}>
-                        <span className={`block w-6 h-0.5 transition ${scrolled ? 'bg-stone-800' : 'bg-white'}`} />
-                        <span className={`block w-6 h-0.5 transition ${scrolled ? 'bg-stone-800' : 'bg-white'}`} />
-                        <span className={`block w-6 h-0.5 transition ${scrolled ? 'bg-stone-800' : 'bg-white'}`} />
+                    <div className={`space-y-1.5 ${isSolid ? 'text-stone-800' : 'text-white'}`}>
+                        <span className={`block w-6 h-0.5 transition ${isSolid ? 'bg-stone-800' : 'bg-white'}`} />
+                        <span className={`block w-6 h-0.5 transition ${isSolid ? 'bg-stone-800' : 'bg-white'}`} />
+                        <span className={`block w-6 h-0.5 transition ${isSolid ? 'bg-stone-800' : 'bg-white'}`} />
                     </div>
                 </button>
             </div>

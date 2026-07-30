@@ -3,6 +3,8 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
 
 interface Service {
   title: string
@@ -734,31 +736,24 @@ function BookingWizard() {
 
 export default function BookPage() {
   return (
-    <main className="min-h-screen bg-[#fafaf9] flex flex-col">
-      {/* Header bar */}
-      <header className="bg-white border-b border-stone-200/80 py-4 px-6 sticky top-0 z-30 shadow-sm">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <Link href="/" className="text-xl font-bold font-serif tracking-tight text-stone-850 hover:text-amber-700 transition">
-            Paradise Ranch
-          </Link>
-          <Link href="/" className="text-xs font-semibold tracking-wide uppercase text-stone-500 hover:text-stone-800 transition flex items-center gap-1.5">
-            <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
-            Back to Website
-          </Link>
-        </div>
-      </header>
+    <main className="min-h-screen bg-[#fafaf9] flex flex-col pt-24">
+      {/* Sticky Solid Navbar */}
+      <Navbar forceSolid={true} />
 
       {/* Booking component wrapped in Suspense for static exports */}
-      <Suspense fallback={
-        <div className="w-full max-w-4xl mx-auto py-12 px-4 flex-1 flex flex-col justify-center items-center text-stone-400">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-stone-500 mb-4" />
-          <span>Loading Booking System...</span>
-        </div>
-      }>
-        <BookingWizard />
-      </Suspense>
+      <div className="flex-1 flex flex-col justify-center py-6 md:py-10">
+        <Suspense fallback={
+          <div className="w-full max-w-4xl mx-auto py-12 px-4 flex-1 flex flex-col justify-center items-center text-stone-400">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-stone-500 mb-4" />
+            <span>Loading Booking System...</span>
+          </div>
+        }>
+          <BookingWizard />
+        </Suspense>
+      </div>
+
+      {/* Footer */}
+      <Footer />
     </main>
   )
 }
