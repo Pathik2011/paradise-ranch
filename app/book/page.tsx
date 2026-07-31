@@ -19,8 +19,8 @@ interface RiderData {
   firstName: string
   lastName: string
   dob: string
-  email: string
-  phone: string
+  email?: string
+  phone?: string
 }
 
 const SERVICES: Service[] = [
@@ -68,6 +68,14 @@ const SERVICES: Service[] = [
   },
 ]
 
+const TIME_SLOTS = [
+  '9:00 AM',
+  '11:00 AM',
+  '1:00 PM',
+  '3:00 PM',
+  '5:00 PM',
+]
+
 function BookingWizard() {
   const searchParams = useSearchParams()
   const serviceParam = searchParams.get('service')
@@ -76,10 +84,12 @@ function BookingWizard() {
   const [step, setStep] = useState(0)
   const [selectedService, setSelectedService] = useState<Service | null>(null)
   const [ridersCount, setRidersCount] = useState(1)
-  
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
   // Calendar state
-  const [currentYear, setCurrentYear] = useState(2026)
-  const [currentMonth, setCurrentMonth] = useState(6) // July (0-indexed 6 is July)
+  const today = new Date()
+  const [currentYear, setCurrentYear] = useState(today.getFullYear())
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth())
   const [selectedDate, setSelectedDate] = useState<number | null>(null)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
 
@@ -107,7 +117,7 @@ function BookingWizard() {
       if (next.length < ridersCount) {
         const diff = ridersCount - next.length
         for (let i = 0; i < diff; i++) {
-          next.push({ firstName: '', lastName: '', dob: '', email: '', phone: '' })
+          next.push({ firstName: '', lastName: '', dob: '' })
         }
       } else if (next.length > ridersCount) {
         next.splice(ridersCount)
@@ -139,13 +149,6 @@ function BookingWizard() {
       next[index] = { ...next[index], [field]: value }
       return next
     })
-  }
-
-  const autofillRiderInfo = (index: number) => {
-    if (index === 0) return
-    const primaryRider = riders[0]
-    handleRiderChange(index, 'email', primaryRider.email)
-    handleRiderChange(index, 'phone', primaryRider.phone)
   }
 
   // Parse price number
@@ -208,14 +211,17 @@ function BookingWizard() {
     setSelectedTime(null)
   }
 
-  // Available days logic: match July 30 and July 31 2026.
-  // For other months, weekends + last two days.
+  // Available days: weekends + no past dates
   const isDateAvailable = (day: number) => {
-    if (currentYear === 2026 && currentMonth === 6) {
-      return day === 30 || day === 31
-    }
     const dateObj = new Date(currentYear, currentMonth, day)
+    const now = new Date()
+    now.setHours(0, 0, 0, 0)
+
+    // Block past dates
+    if (dateObj < now) return false
+
     const dayOfWeek = dateObj.getDay()
+    // Weekends (Sat=6, Sun=0) + last two days of month as buffer
     return dayOfWeek === 0 || dayOfWeek === 6 || day === daysInMonth || day === daysInMonth - 1
   }
 
@@ -226,7 +232,7 @@ function BookingWizard() {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     const dayStr = days[dateObj.getDay()]
     const monthStr = months[dateObj.getMonth()]
-    
+
     let suffix = 'th'
     if (selectedDate === 1 || selectedDate === 21 || selectedDate === 31) suffix = 'st'
     else if (selectedDate === 2 || selectedDate === 22) suffix = 'nd'
@@ -236,32 +242,43 @@ function BookingWizard() {
   }
 
   const isRiderInfoComplete = () => {
-    return riders.every(rider => 
-      rider.firstName.trim() !== '' && 
-      rider.lastName.trim() !== '' && 
-      rider.dob.trim() !== '' && 
-      rider.email.trim() !== '' && 
-      rider.phone.trim() !== ''
-    )
+    return riders.every((rider, idx) => {
+      const baseComplete = rider.firstName.trim() !== '' && rider.lastName.trim() !== '' && rider.dob.trim() !== ''
+      if (idx === 0) {
+        return baseComplete && rider.email?.trim() !== '' && rider.phone?.trim() !== ''
+      }
+      return baseComplete
+    })
   }
 
   const handleConfirmBooking = () => {
     if (isRiderInfoComplete()) {
-      setStep(4) // success step
+      setIsSubmitting(true)
+      // Fake loading for realism
+      setTimeout(() => {
+        setIsSubmitting(false)
+        setStep(4)
+      }, 1500)
     }
+  }
+
+  // Check if we can go to next step
+  const canContinue = () => {
+    if (step === 2) return selectedTime !== null
+    return true
   }
 
   return (
     <div className="w-full max-w-4xl mx-auto py-8 px-4 md:py-12 flex-1 flex flex-col justify-center">
       <div className="bg-white rounded-3xl shadow-xl border border-stone-200/60 overflow-hidden flex flex-col min-h-[500px]">
-        
-        {/* Title Bar inside the container */}
+
+        {/* Title Bar */}
         <div className="px-6 py-4 border-b border-stone-100 bg-stone-50/50 flex items-center justify-between">
-          <span className="font-bold text-base text-stone-700 tracking-wide uppercase font-serif">
+          <span className="font-bold text-base text-stone-700 tracking-wide uppercase">
             {step === 0 ? 'Select a Service' : `${selectedService?.title} Booking`}
           </span>
           {step > 0 && step < 4 && (
-            <button 
+            <button
               onClick={() => {
                 setStep(0)
                 setSelectedService(null)
@@ -275,26 +292,24 @@ function BookingWizard() {
 
         <div className="flex-1 p-6 md:p-10 flex flex-col justify-between">
           <div>
-            {/* STEPPER PROGRESS BAR (Show for Steps 1-3) */}
+            {/* STEPPER PROGRESS BAR */}
             {step > 0 && step < 4 && (
               <div className="max-w-md mx-auto mb-10">
                 <div className="flex items-center justify-between relative">
-                  {/* Connector lines */}
                   <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-stone-200 -translate-y-1/2 z-0" />
-                  <div 
-                    className="absolute top-1/2 left-0 h-0.5 bg-[#2b5c43] -translate-y-1/2 z-0 transition-all duration-300"
+                  <div
+                    className="absolute top-1/2 left-0 h-0.5 bg-amber-600 -translate-y-1/2 z-0 transition-all duration-300"
                     style={{ width: step === 1 ? '0%' : step === 2 ? '50%' : '100%' }}
                   />
 
-                  {/* Step 1: Riders */}
+                  {/* Step 1 */}
                   <div className="flex flex-col items-center relative z-10">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm transition duration-300 ${
-                      step > 1 
-                        ? 'bg-[#2b5c43] text-white' 
-                        : step === 1 
-                          ? 'border-2 border-[#2b5c43] bg-white text-[#2b5c43]' 
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm transition duration-300 ${step > 1
+                        ? 'bg-amber-600 text-white'
+                        : step === 1
+                          ? 'border-2 border-amber-600 bg-white text-amber-600'
                           : 'border border-stone-300 bg-white text-stone-400'
-                    }`}>
+                      }`}>
                       {step > 1 ? (
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -304,15 +319,14 @@ function BookingWizard() {
                     <span className={`text-xs mt-2 font-medium ${step >= 1 ? 'text-stone-800' : 'text-stone-400'}`}>Riders</span>
                   </div>
 
-                  {/* Step 2: Date & Time */}
+                  {/* Step 2 */}
                   <div className="flex flex-col items-center relative z-10">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm transition duration-300 ${
-                      step > 2 
-                        ? 'bg-[#2b5c43] text-white' 
-                        : step === 2 
-                          ? 'border-2 border-[#2b5c43] bg-white text-[#2b5c43]' 
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm transition duration-300 ${step > 2
+                        ? 'bg-amber-600 text-white'
+                        : step === 2
+                          ? 'border-2 border-amber-600 bg-white text-amber-600'
                           : 'border border-stone-300 bg-white text-stone-400'
-                    }`}>
+                      }`}>
                       {step > 2 ? (
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -322,13 +336,12 @@ function BookingWizard() {
                     <span className={`text-xs mt-2 font-medium ${step >= 2 ? 'text-stone-800' : 'text-stone-400'}`}>Date & time</span>
                   </div>
 
-                  {/* Step 3: Rider Info */}
+                  {/* Step 3 */}
                   <div className="flex flex-col items-center relative z-10">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm transition duration-300 ${
-                      step === 3 
-                        ? 'border-2 border-[#2b5c43] bg-white text-[#2b5c43]' 
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm transition duration-300 ${step === 3
+                        ? 'border-2 border-amber-600 bg-white text-amber-600'
                         : 'border border-stone-300 bg-white text-stone-400'
-                    }`}>
+                      }`}>
                       3
                     </div>
                     <span className={`text-xs mt-2 font-medium ${step === 3 ? 'text-stone-800' : 'text-stone-400'}`}>Rider info</span>
@@ -340,29 +353,28 @@ function BookingWizard() {
             {/* STEP 0: SERVICE SELECTION */}
             {step === 0 && (
               <div className="max-w-3xl mx-auto text-center py-4">
-                <h2 className="text-stone-900 font-serif text-3xl md:text-4xl font-semibold mb-2">Ready to ride?</h2>
+                <h2 className="text-stone-900 text-3xl md:text-4xl font-bold mb-2">Ready to ride?</h2>
                 <p className="text-stone-500 font-medium tracking-wide uppercase text-xs mb-10">Our Services</p>
-                
+
                 <div className="grid md:grid-cols-3 gap-6">
                   {SERVICES.map((service, index) => (
-                    <div 
-                      key={index} 
+                    <div
+                      key={index}
                       className="bg-white rounded-2xl p-6 shadow-md border border-stone-200 flex flex-col justify-between relative text-left group hover:shadow-lg transition duration-200"
                     >
                       {service.popular && (
-                        <span className="absolute -top-3 right-4 bg-emerald-800 text-white text-[10px] font-bold tracking-wider px-2.5 py-1 rounded-full uppercase">
+                        <span className="absolute -top-3 right-4 bg-amber-600 text-white text-[10px] font-bold tracking-wider px-2.5 py-1 rounded-full uppercase">
                           Popular
                         </span>
                       )}
                       <div>
-                        <h3 className="text-xl font-bold text-stone-900 mb-2 font-serif">{service.title}</h3>
+                        <h3 className="text-xl font-bold text-stone-900 mb-2">{service.title}</h3>
                         <p className="text-stone-500 text-xs leading-relaxed mb-4">{service.desc}</p>
-                        
-                        {/* Features Checklist */}
+
                         <div className="space-y-2 mb-6">
                           {service.features.map((feature, fIdx) => (
                             <div key={fIdx} className="flex items-center gap-2.5 text-stone-600 text-xs font-medium">
-                              <svg className="w-4 h-4 text-emerald-700 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                              <svg className="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                               </svg>
                               <span>{feature}</span>
@@ -372,12 +384,12 @@ function BookingWizard() {
                       </div>
                       <div>
                         <div className="border-t border-stone-100 pt-4 mb-4">
-                          <span className="text-2xl font-bold text-[#5c3d35] font-serif">{service.price}</span>
+                          <span className="text-2xl font-bold text-amber-700">{service.price}</span>
                           <span className="text-stone-400 text-xs ml-2">/ {service.duration}</span>
                         </div>
-                        <button 
+                        <button
                           onClick={() => handleServiceSelect(service)}
-                          className="w-full bg-[#5c3d35] hover:bg-[#482e28] text-white text-sm font-semibold py-2.5 rounded-xl transition"
+                          className="w-full bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold py-2.5 rounded-xl transition"
                         >
                           Book Now
                         </button>
@@ -391,20 +403,20 @@ function BookingWizard() {
             {/* STEP 1: RIDERS COUNTER */}
             {step === 1 && (
               <div className="max-w-md mx-auto text-center py-6">
-                <h2 className="text-stone-950 font-serif text-3xl font-bold mb-8">How many riders?</h2>
-                
+                <h2 className="text-stone-950 text-3xl font-bold mb-8">How many riders?</h2>
+
                 <div className="flex items-center justify-center gap-8 mb-8">
-                  <button 
+                  <button
                     onClick={() => setRidersCount(prev => Math.max(1, prev - 1))}
                     disabled={ridersCount === 1}
                     className="w-16 h-16 rounded-full border border-stone-300 bg-white text-stone-600 flex items-center justify-center text-3xl font-light hover:bg-stone-50 hover:border-stone-400 active:scale-95 transition disabled:opacity-50 disabled:pointer-events-none"
                   >
                     &minus;
                   </button>
-                  <span className="text-6xl font-bold text-stone-900 w-24 select-none font-serif">{ridersCount}</span>
-                  <button 
-                    onClick={() => setRidersCount(prev => Math.min(10, prev + 1))}
-                    disabled={ridersCount === 10}
+                  <span className="text-6xl font-bold text-stone-900 w-24 select-none">{ridersCount}</span>
+                  <button
+                    onClick={() => setRidersCount(prev => Math.min(6, prev + 1))}
+                    disabled={ridersCount === 6}
                     className="w-16 h-16 rounded-full border border-stone-300 bg-white text-stone-600 flex items-center justify-center text-3xl font-light hover:bg-stone-50 hover:border-stone-400 active:scale-95 transition disabled:opacity-50 disabled:pointer-events-none"
                   >
                     &#43;
@@ -412,7 +424,7 @@ function BookingWizard() {
                 </div>
 
                 <p className="text-stone-400 text-xs leading-relaxed max-w-xs mx-auto">
-                  Select between 1 to 10 riders. For larger groups, please contact the ranch directly to schedule a private tour.
+                  Select between 1 to 6 riders. For larger groups, please contact the ranch directly to schedule a private tour.
                 </p>
               </div>
             )}
@@ -421,8 +433,8 @@ function BookingWizard() {
             {step === 2 && (
               <div className="max-w-3xl mx-auto py-2">
                 <div className="text-center mb-8">
-                  <h2 className="text-stone-900 font-serif text-3xl font-semibold mb-3">When are you riding?</h2>
-                  <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">
+                  <h2 className="text-stone-900 text-3xl font-semibold mb-3">When are you riding?</h2>
+                  <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold">
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                     </svg>
@@ -431,12 +443,12 @@ function BookingWizard() {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-8 items-start">
-                  
+
                   {/* CALENDAR */}
                   <div className="bg-white p-6 rounded-2xl border border-stone-200">
-                    <div className="text-center font-bold text-stone-800 text-base mb-4 font-serif">Select a Day and Time</div>
+                    <div className="text-center font-bold text-stone-800 text-base mb-4">Select a Day and Time</div>
                     <div className="flex items-center justify-between mb-4">
-                      <button 
+                      <button
                         onClick={handlePrevMonth}
                         className="p-2 border border-stone-200 rounded-lg hover:bg-stone-50 text-stone-600 transition"
                         aria-label="Previous month"
@@ -445,12 +457,12 @@ function BookingWizard() {
                           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                         </svg>
                       </button>
-                      
-                      <span className="font-bold text-stone-800 text-sm font-serif">
+
+                      <span className="font-bold text-stone-800 text-sm">
                         {monthNames[currentMonth]} {currentYear}
                       </span>
 
-                      <button 
+                      <button
                         onClick={handleNextMonth}
                         className="p-2 border border-stone-200 rounded-lg hover:bg-stone-50 text-stone-600 transition"
                         aria-label="Next month"
@@ -461,7 +473,6 @@ function BookingWizard() {
                       </button>
                     </div>
 
-                    {/* Calendar Grid */}
                     <div className="grid grid-cols-7 gap-1 text-center mb-2">
                       {daysOfWeek.map(d => (
                         <span key={d} className="text-xs font-semibold text-stone-400 py-1">{d}</span>
@@ -483,15 +494,14 @@ function BookingWizard() {
                             disabled={!available}
                             onClick={() => {
                               setSelectedDate(day)
-                              setSelectedTime(null) // Reset time selection on date change
+                              setSelectedTime(null)
                             }}
-                            className={`aspect-square w-full rounded-full text-xs font-semibold flex items-center justify-center transition ${
-                              isSelected 
-                                ? 'bg-[#5c3d35] text-white font-bold' 
-                                : available 
-                                  ? 'text-[#5c3d35] hover:bg-[#5c3d35]/10 font-bold text-sm' 
+                            className={`aspect-square w-full rounded-full text-xs font-semibold flex items-center justify-center transition ${isSelected
+                                ? 'bg-amber-600 text-white font-bold'
+                                : available
+                                  ? 'text-amber-700 hover:bg-amber-50 font-bold text-sm'
                                   : 'text-stone-300 cursor-not-allowed font-normal'
-                            }`}
+                              }`}
                           >
                             {day}
                           </button>
@@ -504,34 +514,26 @@ function BookingWizard() {
                   <div className="min-h-[250px] bg-stone-50 md:bg-transparent rounded-2xl">
                     {selectedDate !== null ? (
                       <div>
-                        <h3 className="font-bold text-stone-800 mb-4 text-sm tracking-wide uppercase font-serif">
+                        <h3 className="font-bold text-stone-800 mb-4 text-sm tracking-wide uppercase">
                           {formatDateString()}
                         </h3>
-                        
-                        <div className="space-y-3">
-                          <button
-                            onClick={() => setSelectedTime('4:00 pm')}
-                            className={`w-full p-5 rounded-xl border text-center transition ${
-                              selectedTime === '4:00 pm'
-                                ? 'bg-[#5c3d35] border-[#5c3d35] text-white shadow-md'
-                                : 'bg-white border-stone-200 text-stone-800 hover:border-stone-300'
-                            }`}
-                          >
-                            <div className="font-bold text-lg font-serif">4:00 pm</div>
-                            <div className={`text-xs mt-1 ${selectedTime === '4:00 pm' ? 'text-stone-200' : 'text-stone-400'}`}>6 spots left</div>
-                          </button>
 
-                          <button
-                            onClick={() => setSelectedTime('6:00 pm')}
-                            className={`w-full p-5 rounded-xl border text-center transition ${
-                              selectedTime === '6:00 pm'
-                                ? 'bg-[#5c3d35] border-[#5c3d35] text-white shadow-md'
-                                : 'bg-white border-stone-200 text-stone-800 hover:border-stone-300'
-                            }`}
-                          >
-                            <div className="font-bold text-lg font-serif">6:00 pm</div>
-                            <div className={`text-xs mt-1 ${selectedTime === '6:00 pm' ? 'text-stone-200' : 'text-stone-400'}`}>6 spots left</div>
-                          </button>
+                        <div className="space-y-3">
+                          {TIME_SLOTS.map((slot) => (
+                            <button
+                              key={slot}
+                              onClick={() => setSelectedTime(slot)}
+                              className={`w-full p-5 rounded-xl border text-center transition ${selectedTime === slot
+                                  ? 'bg-amber-600 border-amber-600 text-white shadow-md'
+                                  : 'bg-white border-stone-200 text-stone-800 hover:border-stone-300'
+                                }`}
+                            >
+                              <div className="font-bold text-lg">{slot}</div>
+                              <div className={`text-xs mt-1 ${selectedTime === slot ? 'text-amber-100' : 'text-stone-400'}`}>
+                                {ridersCount} spot{ridersCount > 1 ? 's' : ''} reserved
+                              </div>
+                            </button>
+                          ))}
                         </div>
                       </div>
                     ) : (
@@ -552,20 +554,20 @@ function BookingWizard() {
             {step === 3 && (
               <div className="max-w-3xl mx-auto py-2">
                 <div className="grid md:grid-cols-3 gap-8">
-                  
+
                   {/* Instruction Left Column */}
                   <div className="md:col-span-1 text-stone-700">
                     <div className="sticky top-0">
-                      <h3 className="font-serif text-2xl font-bold text-stone-900 mb-2">Rider Info</h3>
+                      <h3 className="text-2xl font-bold text-stone-900 mb-2">Rider Info</h3>
                       <p className="text-stone-500 text-xs leading-relaxed mb-6">
-                        Please provide the following information for the primary rider.
+                        Please provide the following information for the primary rider. Additional riders only need name and date of birth.
                       </p>
-                      
+
                       {ridersCount > 1 && (
                         <>
-                          <h4 className="font-bold text-stone-900 text-sm mt-8 mb-2 font-serif">Additional Riders</h4>
+                          <h4 className="font-bold text-stone-900 text-sm mt-8 mb-2">Additional Riders</h4>
                           <p className="text-stone-500 text-xs leading-relaxed">
-                            If you have additional riders, please provide their information below.
+                            Only name and date of birth required for additional riders.
                           </p>
                         </>
                       )}
@@ -580,16 +582,6 @@ function BookingWizard() {
                           <span className="font-bold text-stone-800 text-xs tracking-wide uppercase">
                             {index === 0 ? 'Primary Rider (Rider 1)' : `Rider ${index + 1}`}
                           </span>
-                          
-                          {index > 0 && (
-                            <button
-                              type="button"
-                              onClick={() => autofillRiderInfo(index)}
-                              className="text-[#5c3d35] hover:text-[#482e28] border border-[#5c3d35]/30 hover:border-[#5c3d35]/60 rounded px-2.5 py-1 text-xs font-semibold bg-[#5c3d35]/5 transition self-start sm:self-auto"
-                            >
-                              Use Rider 1's email & phone
-                            </button>
-                          )}
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -600,7 +592,7 @@ function BookingWizard() {
                               required
                               value={rider.firstName}
                               onChange={e => handleRiderChange(index, 'firstName', e.target.value)}
-                              className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:border-[#5c3d35] bg-stone-50"
+                              className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200 bg-stone-50"
                               placeholder="John"
                             />
                           </div>
@@ -611,11 +603,11 @@ function BookingWizard() {
                               required
                               value={rider.lastName}
                               onChange={e => handleRiderChange(index, 'lastName', e.target.value)}
-                              className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:border-[#5c3d35] bg-stone-50"
+                              className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200 bg-stone-50"
                               placeholder="Doe"
                             />
                           </div>
-                          
+
                           <div className="col-span-1">
                             <label className="block text-xs font-semibold text-stone-500 mb-1.5">Date of Birth</label>
                             <input
@@ -623,33 +615,38 @@ function BookingWizard() {
                               required
                               value={rider.dob}
                               onChange={e => handleRiderChange(index, 'dob', e.target.value)}
-                              className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:border-[#5c3d35] bg-stone-50"
+                              className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200 bg-stone-50"
                             />
                           </div>
 
-                          <div className="col-span-1">
-                            <label className="block text-xs font-semibold text-stone-500 mb-1.5">Phone</label>
-                            <input
-                              type="tel"
-                              required
-                              value={rider.phone}
-                              onChange={e => handleRiderChange(index, 'phone', e.target.value)}
-                              className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:border-[#5c3d35] bg-stone-50"
-                              placeholder="(256) 555-0199"
-                            />
-                          </div>
+                          {/* Only show email/phone for primary rider */}
+                          {index === 0 && (
+                            <>
+                              <div className="col-span-1">
+                                <label className="block text-xs font-semibold text-stone-500 mb-1.5">Phone</label>
+                                <input
+                                  type="tel"
+                                  required
+                                  value={rider.phone}
+                                  onChange={e => handleRiderChange(index, 'phone', e.target.value)}
+                                  className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200 bg-stone-50"
+                                  placeholder="(727) 314-0201"
+                                />
+                              </div>
 
-                          <div className="col-span-2">
-                            <label className="block text-xs font-semibold text-stone-500 mb-1.5">Email</label>
-                            <input
-                              type="email"
-                              required
-                              value={rider.email}
-                              onChange={e => handleRiderChange(index, 'email', e.target.value)}
-                              className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:border-[#5c3d35] bg-stone-50"
-                              placeholder="john.doe@example.com"
-                            />
-                          </div>
+                              <div className="col-span-2">
+                                <label className="block text-xs font-semibold text-stone-500 mb-1.5">Email</label>
+                                <input
+                                  type="email"
+                                  required
+                                  value={rider.email}
+                                  onChange={e => handleRiderChange(index, 'email', e.target.value)}
+                                  className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200 bg-stone-50"
+                                  placeholder="john.doe@example.com"
+                                />
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -662,15 +659,15 @@ function BookingWizard() {
             {/* STEP 4: SUCCESS VIEW */}
             {step === 4 && (
               <div className="max-w-md mx-auto text-center py-10 px-4">
-                <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-600">
+                <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6 text-amber-600">
                   <svg className="w-12 h-12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
 
-                <h2 className="text-stone-900 font-serif text-3xl font-bold mb-3">Booking Confirmed!</h2>
+                <h2 className="text-stone-900 text-3xl font-bold mb-3">Booking Request Sent!</h2>
                 <p className="text-stone-600 text-sm mb-6 leading-relaxed">
-                  Thank you, <span className="font-semibold text-stone-900">{riders[0]?.firstName}</span>! We look forward to seeing you at Paradise Ranch. A confirmation and directions email has been sent to <span className="font-semibold text-stone-900">{riders[0]?.email}</span>.
+                  Thank you, <span className="font-semibold text-stone-900">{riders[0]?.firstName}</span>! We will send a confirmation email shortly to <span className="font-semibold text-stone-900">{riders[0]?.email}</span>.
                 </p>
 
                 <div className="bg-stone-100 p-6 rounded-2xl text-left text-xs space-y-2.5 mb-8 border border-stone-200">
@@ -687,25 +684,25 @@ function BookingWizard() {
                     <span className="font-bold text-stone-800">{formatDateString()} at {selectedTime}</span>
                   </div>
                   <div className="flex justify-between border-t border-stone-200 pt-2.5 mt-2.5">
-                    <span className="text-stone-400 font-medium">Total Paid:</span>
-                    <span className="font-bold text-stone-900 text-sm">${getSubtotal().toFixed(2)} + HST</span>
+                    <span className="text-stone-400 font-medium">Subtotal:</span>
+                    <span className="font-bold text-stone-900 text-sm">${getSubtotal().toFixed(2)}</span>
                   </div>
                 </div>
 
-                <Link 
+                <Link
                   href="/"
-                  className="inline-block w-full bg-[#5c3d35] hover:bg-[#482e28] text-white font-semibold py-3 rounded-xl transition shadow-lg hover:shadow-xl font-serif text-center"
+                  className="inline-block w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 rounded-xl transition shadow-lg hover:shadow-xl text-center"
                 >
-                  Return to Homepage
+                  Back to Home
                 </Link>
               </div>
             )}
           </div>
 
-          {/* FOOTER ACTION BAR (Only visible for steps 1-3) */}
+          {/* FOOTER ACTION BAR */}
           {step > 0 && step < 4 && (
             <div className="mt-8 pt-6 border-t border-stone-200/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              
+
               {/* Selection Summary */}
               <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-stone-500">
                 <span className="flex items-center gap-1.5 bg-stone-100 px-2.5 py-1.5 rounded-lg">
@@ -719,39 +716,45 @@ function BookingWizard() {
                   <svg className="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  {selectedTime ? `${formatDateString()} - ${selectedTime}` : <span className="text-stone-400 font-normal">No time selected</span>}
+                  {selectedTime ? `${formatDateString()} - ${selectedTime}` : <span className="text-stone-400 font-normal">Select a time</span>}
                 </span>
 
                 <span className="flex items-center gap-1.5 bg-stone-100 px-2.5 py-1.5 rounded-lg">
                   <svg className="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75-3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5h15a2.25 2.25 0 002.25-2.25V14" />
                   </svg>
-                  <span className="text-stone-900 font-bold text-sm font-serif">${getSubtotal().toFixed(2)} + HST</span>
+                  <span className="text-stone-900 font-bold text-sm">${getSubtotal().toFixed(2)}</span>
                 </span>
               </div>
 
               {/* Navigation buttons */}
               <div className="flex items-center gap-3 ml-auto w-full sm:w-auto">
-                <button 
+                <button
                   onClick={handleBackStep}
                   className="flex-1 sm:flex-none border border-stone-300 hover:border-stone-400 hover:bg-stone-50 text-stone-700 px-6 py-2.5 rounded-xl font-bold text-sm transition"
                 >
                   Back
                 </button>
-                
+
                 {step === 3 ? (
-                  <button 
+                  <button
                     onClick={handleConfirmBooking}
-                    disabled={!isRiderInfoComplete()}
-                    className="flex-1 sm:flex-none bg-[#5c3d35] hover:bg-[#482e28] text-white px-8 py-2.5 rounded-xl font-bold text-sm transition disabled:opacity-50 disabled:pointer-events-none shadow-md hover:shadow-lg"
+                    disabled={!isRiderInfoComplete() || isSubmitting}
+                    className="flex-1 sm:flex-none bg-amber-600 hover:bg-amber-700 text-white px-8 py-2.5 rounded-xl font-bold text-sm transition disabled:opacity-50 disabled:pointer-events-none shadow-md hover:shadow-lg flex items-center justify-center gap-2"
                   >
-                    Confirm Booking
+                    {isSubmitting && (
+                      <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    )}
+                    {isSubmitting ? 'Processing...' : 'Confirm Booking'}
                   </button>
                 ) : (
-                  <button 
+                  <button
                     onClick={handleNextStep}
-                    disabled={step === 2 && !selectedTime}
-                    className="flex-1 sm:flex-none bg-[#5c3d35] hover:bg-[#482e28] text-white px-8 py-2.5 rounded-xl font-bold text-sm transition disabled:opacity-50 disabled:pointer-events-none shadow-md hover:shadow-lg"
+                    disabled={!canContinue()}
+                    className="flex-1 sm:flex-none bg-amber-600 hover:bg-amber-700 text-white px-8 py-2.5 rounded-xl font-bold text-sm transition disabled:opacity-50 disabled:pointer-events-none shadow-md hover:shadow-lg"
                   >
                     Continue
                   </button>
@@ -770,15 +773,13 @@ function BookingWizard() {
 
 export default function BookPage() {
   return (
-    <main className="min-h-screen bg-[#fafaf9] flex flex-col pt-24">
-      {/* Sticky Solid Navbar */}
+    <main className="min-h-screen bg-stone-50 flex flex-col pt-24">
       <Navbar forceSolid={true} />
 
-      {/* Booking component wrapped in Suspense for static exports */}
       <div className="flex-1 flex flex-col justify-center py-6 md:py-10">
         <Suspense fallback={
           <div className="w-full max-w-4xl mx-auto py-12 px-4 flex-1 flex flex-col justify-center items-center text-stone-400">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-stone-500 mb-4" />
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-amber-500 mb-4" />
             <span>Loading Booking System...</span>
           </div>
         }>
@@ -786,7 +787,6 @@ export default function BookPage() {
         </Suspense>
       </div>
 
-      {/* Footer */}
       <Footer />
     </main>
   )
